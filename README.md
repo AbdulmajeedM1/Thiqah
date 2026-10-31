@@ -116,3 +116,22 @@ flutter build apk --debug
 - بُني Android Debug APK وثُبّت على المحاكي. جرى تسجيل الدخول بحساب المدير، وإعادة تشغيل التطبيق لاستعادة الجلسة، ثم تسجيل الخروج والعودة إلى شاشة الدخول.
 - في تحديث السوق المشترك، جرى تثبيت APK فوق النسخة السابقة دون مسح البيانات. استعاد التطبيق جلسة مقدم الخدمة، وظهرت طلبات العميل المنشورة الموجودة مسبقًا في «سوق الطلبات». صورة التحقق: `screenshots/provider-requests.png`.
 - صور الواجهات الحالية في `screenshots/login.png` و`screenshots/registration.png` و`screenshots/registration-bottom.png` و`screenshots/admin.png`.
+
+
+
+ACCOUNT INFORMATION :
+
+USER :
+
+Abdulmajeed
+Aa12121212
+
+admin :
+
+admin
+admin121212
+
+SERVICE PROVIDER :
+
+Ali
+Aa12121212
