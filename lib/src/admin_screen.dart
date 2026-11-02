@@ -131,7 +131,11 @@ class _AdminScreenState extends State<AdminScreen> {
     ),
     child: Text(
       label,
-      style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700),
+      style: TextStyle(
+        color: appAccent(context, color),
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+      ),
     ),
   );
 
@@ -145,17 +149,20 @@ class _AdminScreenState extends State<AdminScreen> {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 19, color: muted),
+        Icon(icon, size: 19, color: appMuted(context)),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(color: muted, fontSize: 12)),
+              Text(
+                label,
+                style: TextStyle(color: appMuted(context), fontSize: 12),
+              ),
               SelectableText(
                 value.isEmpty ? '—' : value,
                 textDirection: leftToRight ? TextDirection.ltr : null,
-                style: const TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 14),
               ),
             ],
           ),
@@ -249,12 +256,12 @@ class _AdminScreenState extends State<AdminScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                backgroundColor: pale,
+                backgroundColor: appPale(context),
                 child: Icon(
                   user.role == 'admin'
                       ? Icons.admin_panel_settings_outlined
                       : Icons.person_outline,
-                  color: green,
+                  color: appAccent(context, green),
                 ),
               ),
               const SizedBox(width: 12),
@@ -269,7 +276,7 @@ class _AdminScreenState extends State<AdminScreen> {
                     Text(
                       '@${user.username}',
                       textDirection: TextDirection.ltr,
-                      style: const TextStyle(color: muted, fontSize: 13),
+                      style: TextStyle(color: appMuted(context), fontSize: 13),
                     ),
                   ],
                 ),
@@ -288,7 +295,8 @@ class _AdminScreenState extends State<AdminScreen> {
                     : s.t('موقوف', 'Suspended'),
                 user.status == 'active' ? green : const Color(0xFFB42318),
               ),
-              if (user.id == auth.user?.id) _badge(s.t('حسابك', 'You'), muted),
+              if (user.id == auth.user?.id)
+                _badge(s.t('حسابك', 'You'), appMuted(context)),
             ],
           ),
           const SizedBox(height: 12),
@@ -298,7 +306,7 @@ class _AdminScreenState extends State<AdminScreen> {
                 : user.email,
             textDirection: TextDirection.ltr,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: muted, fontSize: 13),
+            style: TextStyle(color: appMuted(context), fontSize: 13),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -309,7 +317,7 @@ class _AdminScreenState extends State<AdminScreen> {
               TextButton.icon(
                 key: ValueKey('userDetails-${user.id}'),
                 onPressed: () => _showDetails(user),
-                icon: const Icon(Icons.info_outline, size: 18),
+                icon: Icon(Icons.info_outline, size: 18),
                 label: Text(s.t('عرض البيانات', 'View details')),
               ),
               if (user.role != 'admin' && user.id != auth.user?.id)
@@ -356,10 +364,13 @@ class _AdminScreenState extends State<AdminScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: green, size: 22),
+              Icon(icon, color: appAccent(context, green), size: 22),
               const SizedBox(height: 12),
               Text('$count', style: Theme.of(context).textTheme.headlineMedium),
-              Text(label, style: const TextStyle(color: muted, fontSize: 12)),
+              Text(
+                label,
+                style: TextStyle(color: appMuted(context), fontSize: 12),
+              ),
             ],
           ),
         ),
@@ -391,7 +402,7 @@ class _AdminScreenState extends State<AdminScreen> {
             IconButton(
               tooltip: s.t('تحديث الحسابات', 'Refresh accounts'),
               onPressed: _loading || _changingId != null ? null : _load,
-              icon: const Icon(Icons.refresh),
+              icon: Icon(Icons.refresh),
             ),
             PopupMenuButton<String>(
               tooltip: s.t('خيارات الحساب', 'Account options'),
@@ -406,11 +417,22 @@ class _AdminScreenState extends State<AdminScreen> {
                 } else if (value == 'language') {
                   s.english = !s.english;
                   s.save();
+                } else if (value == 'theme') {
+                  s.darkMode = !s.darkMode;
+                  s.save();
                 } else if (value == 'logout') {
                   _logout();
                 }
               },
               itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: 'theme',
+                  child: Text(
+                    s.darkMode
+                        ? s.t('الوضع الفاتح', 'Light mode')
+                        : s.t('الوضع الداكن', 'Dark mode'),
+                  ),
+                ),
                 PopupMenuItem(
                   value: 'password',
                   child: Text(s.t('تغيير كلمة المرور', 'Change password')),
@@ -436,13 +458,13 @@ class _AdminScreenState extends State<AdminScreen> {
               children: [
                 const SizedBox(height: 10),
                 Panel(
-                  color: pale,
+                  color: appPale(context),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.admin_panel_settings_outlined,
-                        color: green,
+                        color: appAccent(context, green),
                         size: 32,
                       ),
                       const SizedBox(height: 12),
@@ -459,7 +481,7 @@ class _AdminScreenState extends State<AdminScreen> {
                           'تابع الحسابات المسجّلة وفعّل أو أوقف وصول المستخدمين.',
                           'Review registered accounts and manage user access.',
                         ),
-                        style: const TextStyle(color: ink),
+                        style: TextStyle(color: appInk(context)),
                       ),
                     ],
                   ),
@@ -515,13 +537,13 @@ class _AdminScreenState extends State<AdminScreen> {
                       'ابحث بالاسم أو البريد أو الجوال',
                       'Search by name, email or phone',
                     ),
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: Icon(Icons.search),
                     suffixIcon: _search.text.isEmpty
                         ? null
                         : IconButton(
                             tooltip: s.t('مسح البحث', 'Clear search'),
                             onPressed: () => setState(_search.clear),
-                            icon: const Icon(Icons.close),
+                            icon: Icon(Icons.close),
                           ),
                   ),
                 ),
@@ -530,7 +552,7 @@ class _AdminScreenState extends State<AdminScreen> {
                   AuthErrorNotice(authErrorText(_error!, s.english)),
                   TextButton.icon(
                     onPressed: _loading ? null : _load,
-                    icon: const Icon(Icons.refresh),
+                    icon: Icon(Icons.refresh),
                     label: Text(s.t('إعادة المحاولة', 'Try again')),
                   ),
                   const SizedBox(height: 10),

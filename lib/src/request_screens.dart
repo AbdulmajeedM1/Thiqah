@@ -8,6 +8,8 @@ import 'store.dart';
 import 'number_input.dart';
 import 'widgets.dart';
 import 'secondary_screens.dart';
+import 'request_progress.dart';
+import 'provider_screen.dart';
 
 Future<List<Document>> pickDocuments() async {
   final result = await FilePicker.platform.pickFiles(
@@ -189,7 +191,7 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
               'اكتب التفاصيل عشان توصلك عروض مناسبة.',
               'Add details to receive relevant offers.',
             ),
-            style: const TextStyle(color: muted),
+            style: TextStyle(color: appMuted(context)),
           ),
           Heading(s.t('١. تفاصيل المعاملة', '1. Request details')),
           DropdownButtonFormField<int>(
@@ -234,7 +236,7 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
             controller: city,
             decoration: InputDecoration(
               labelText: s.t('المدينة', 'City'),
-              prefixIcon: const Icon(Icons.location_on_outlined),
+              prefixIcon: Icon(Icons.location_on_outlined),
             ),
             validator: (v) => requiredText(v, 2),
           ),
@@ -273,10 +275,14 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
           ),
           Heading(s.t('٢. المستندات', '2. Documents')),
           Panel(
-            color: pale,
+            color: appPale(context),
             child: Column(
               children: [
-                const Icon(Icons.cloud_upload_outlined, size: 36, color: green),
+                Icon(
+                  Icons.cloud_upload_outlined,
+                  size: 36,
+                  color: appAccent(context, green),
+                ),
                 const SizedBox(height: 8),
                 Text(s.t('أرفق ملفات تجريبية فقط', 'Attach sample files only')),
                 Text(
@@ -284,12 +290,12 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
                     'حفظ محلي • ٢٥ ميجابايت للملف • حتى ١٠ ملفات',
                     'Local storage • 25 MB each • Up to 10 files',
                   ),
-                  style: const TextStyle(fontSize: 11, color: muted),
+                  style: TextStyle(fontSize: 11, color: appMuted(context)),
                 ),
                 const SizedBox(height: 10),
                 OutlinedButton.icon(
                   onPressed: busy ? null : attach,
-                  icon: const Icon(Icons.attach_file),
+                  icon: Icon(Icons.attach_file),
                   label: Text(
                     s.t(
                       busy ? 'جارٍ الإرفاق…' : 'اختيار الملفات',
@@ -302,16 +308,16 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
           ),
           ...docs.map(
             (d) => ListTile(
-              leading: const Icon(
+              leading: Icon(
                 Icons.insert_drive_file_outlined,
-                color: green,
+                color: appAccent(context, green),
               ),
               title: Text(d.name, maxLines: 1, overflow: TextOverflow.ellipsis),
               subtitle: Text('${(d.size / 1024).ceil()} KB'),
               trailing: IconButton(
                 tooltip: s.t('إزالة المرفق', 'Remove attachment'),
                 onPressed: () => setState(() => docs.remove(d)),
-                icon: const Icon(Icons.close),
+                icon: Icon(Icons.close),
               ),
             ),
           ),
@@ -326,13 +332,13 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
                 'أوافق على تفويض مقدم الخدمة المختار بمتابعة هذه المعاملة ضمن نطاق الطلب.',
                 'I authorize the selected provider to handle this request within its stated scope.',
               ),
-              style: const TextStyle(fontSize: 13),
+              style: TextStyle(fontSize: 13),
             ),
           ),
           const SizedBox(height: 22),
           FilledButton.icon(
             onPressed: busy ? null : () => submit(false),
-            icon: const Icon(Icons.check_circle_outline),
+            icon: Icon(Icons.check_circle_outline),
             label: Text(s.t('نشر الطلب', 'Publish request')),
           ),
           const SizedBox(height: 8),
@@ -376,7 +382,7 @@ class _RequestScreenState extends State<RequestScreen> {
             IconButton(
               tooltip: s.t('المحادثة', 'Conversation'),
               onPressed: () => open(ChatScreen(store: s, request: r)),
-              icon: const Icon(Icons.chat_bubble_outline),
+              icon: Icon(Icons.chat_bubble_outline),
             ),
         ],
       ),
@@ -388,7 +394,7 @@ class _RequestScreenState extends State<RequestScreen> {
               const Spacer(),
               Text(
                 '#${r.id.length > 8 ? r.id.substring(r.id.length - 6) : r.id}',
-                style: const TextStyle(color: muted),
+                style: TextStyle(color: appMuted(context)),
               ),
             ],
           ),
@@ -397,9 +403,11 @@ class _RequestScreenState extends State<RequestScreen> {
           const SizedBox(height: 8),
           Text(
             '${s.category(r.category)}  •  ${r.city}',
-            style: const TextStyle(color: muted),
+            style: TextStyle(color: appMuted(context)),
           ),
           const SizedBox(height: 22),
+          RequestProgress(store: s, request: r),
+          const SizedBox(height: 18),
           Panel(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -418,9 +426,9 @@ class _RequestScreenState extends State<RequestScreen> {
                     ),
                     Text(
                       s.money(r.budget),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w800,
-                        color: green,
+                        color: appAccent(context, green),
                       ),
                     ),
                   ],
@@ -430,7 +438,7 @@ class _RequestScreenState extends State<RequestScreen> {
                     padding: const EdgeInsets.only(top: 10),
                     child: Text(
                       s.t('طلب عاجل', 'Urgent request'),
-                      style: const TextStyle(color: Color(0xFF946200)),
+                      style: TextStyle(color: Color(0xFF946200)),
                     ),
                   ),
               ],
@@ -466,7 +474,7 @@ class _RequestScreenState extends State<RequestScreen> {
             if (s.provider && !r.offers.any(s.ownsOffer))
               FilledButton.icon(
                 onPressed: () => open(OfferScreen(store: s, request: r)),
-                icon: const Icon(Icons.add),
+                icon: Icon(Icons.add),
                 label: Text(s.t('قدّم عرضك', 'Submit an offer')),
               ),
             if (s.provider && r.offers.any(s.ownsOffer))
@@ -486,7 +494,7 @@ class _RequestScreenState extends State<RequestScreen> {
             Heading(s.t('مقدم الخدمة المختار', 'Selected provider')),
             offerCard(r.selected!, selectable: false),
             Panel(
-              color: pale,
+              color: appPale(context),
               child: Column(
                 children: [
                   row(
@@ -506,7 +514,7 @@ class _RequestScreenState extends State<RequestScreen> {
                       'جميع المبالغ محاكاة ولا يتم خصم أموال.',
                       'All amounts are simulated. No money is charged.',
                     ),
-                    style: const TextStyle(fontSize: 12, color: muted),
+                    style: TextStyle(fontSize: 12, color: appMuted(context)),
                   ),
                 ],
               ),
@@ -523,7 +531,7 @@ class _RequestScreenState extends State<RequestScreen> {
                 ),
                 () => s.pay(r),
               ),
-              icon: const Icon(Icons.lock_outline),
+              icon: Icon(Icons.lock_outline),
               label: Text(
                 s.t('دفع تجريبي وبدء الطلب', 'Simulate payment & start'),
               ),
@@ -546,7 +554,7 @@ class _RequestScreenState extends State<RequestScreen> {
                   onSubmit: (v) => s.complete(r, v),
                 ),
               ),
-              icon: const Icon(Icons.task_alt),
+              icon: Icon(Icons.task_alt),
               label: Text(s.t('تسليم المعاملة', 'Submit completed work')),
             ),
           ],
@@ -595,7 +603,7 @@ class _RequestScreenState extends State<RequestScreen> {
                   'الإبلاغ عن مشكلة / فتح نزاع',
                   'Report a problem / open dispute',
                 ),
-                style: const TextStyle(color: Color(0xFFC0392B)),
+                style: TextStyle(color: Color(0xFFC0392B)),
               ),
             ),
           ],
@@ -607,10 +615,7 @@ class _RequestScreenState extends State<RequestScreen> {
                   children: [
                     Text(
                       '★' * r.rating,
-                      style: const TextStyle(
-                        color: Color(0xFFB8860B),
-                        fontSize: 28,
-                      ),
+                      style: TextStyle(color: Color(0xFFB8860B), fontSize: 28),
                     ),
                     Text(r.review),
                   ],
@@ -632,13 +637,16 @@ class _RequestScreenState extends State<RequestScreen> {
               contentPadding: EdgeInsets.zero,
               leading: CircleAvatar(
                 radius: 15,
-                backgroundColor: pale,
+                backgroundColor: appPale(context),
                 child: Text(
                   '${e.key + 1}',
-                  style: const TextStyle(color: green, fontSize: 12),
+                  style: TextStyle(
+                    color: appAccent(context, green),
+                    fontSize: 12,
+                  ),
                 ),
               ),
-              title: Text(e.value, style: const TextStyle(fontSize: 13)),
+              title: Text(e.value, style: TextStyle(fontSize: 13)),
             ),
           ),
           if (!s.provider &&
@@ -654,7 +662,7 @@ class _RequestScreenState extends State<RequestScreen> {
               ),
               child: Text(
                 s.t('إلغاء الطلب', 'Cancel request'),
-                style: const TextStyle(color: Color(0xFFC0392B)),
+                style: TextStyle(color: Color(0xFFC0392B)),
               ),
             ),
         ],
@@ -664,7 +672,7 @@ class _RequestScreenState extends State<RequestScreen> {
   Widget row(String a, String b) => Row(
     children: [
       Expanded(child: Text(a)),
-      Text(b, style: const TextStyle(fontWeight: FontWeight.w700)),
+      Text(b, style: TextStyle(fontWeight: FontWeight.w700)),
     ],
   );
   Widget offerCard(Offer o, {bool selectable = true}) => Padding(
@@ -675,22 +683,25 @@ class _RequestScreenState extends State<RequestScreen> {
         children: [
           Row(
             children: [
-              const CircleAvatar(
-                backgroundColor: pale,
-                child: Icon(Icons.person_outline, color: green),
+              CircleAvatar(
+                backgroundColor: appPale(context),
+                child: Icon(
+                  Icons.person_outline,
+                  color: appAccent(context, green),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   o.name,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  style: TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
               Text(
                 s.money(o.amount),
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w800,
-                  color: green,
+                  color: appAccent(context, green),
                 ),
               ),
             ],
@@ -701,9 +712,16 @@ class _RequestScreenState extends State<RequestScreen> {
               'المدة المتوقعة: ${o.days} أيام',
               'Estimated delivery: ${o.days} days',
             ),
-            style: const TextStyle(color: muted, fontSize: 12),
+            style: TextStyle(color: appMuted(context), fontSize: 12),
           ),
           if (o.notes.isNotEmpty) Text(o.notes),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            key: ValueKey('provider-profile-${o.id}'),
+            onPressed: () => open(ProviderScreen(store: s, offer: o)),
+            icon: const Icon(Icons.person_search_outlined, size: 19),
+            label: Text(s.t('عرض ملف مقدم الخدمة', 'View provider profile')),
+          ),
           if (selectable && !s.provider && r.stage == Stage.open) ...[
             const SizedBox(height: 12),
             SizedBox(
@@ -910,7 +928,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     body: PageBody(
       children: [
         const SizedBox(height: 30),
-        const Icon(Icons.task_alt, color: green, size: 60),
+        Icon(Icons.task_alt, color: appAccent(context, green), size: 60),
         Heading(widget.store.t('كيف كانت تجربتك؟', 'How was your experience?')),
         Wrap(
           alignment: WrapAlignment.center,

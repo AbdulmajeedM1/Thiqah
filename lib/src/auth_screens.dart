@@ -451,7 +451,7 @@ class _AuthScreenState extends State<AuthScreen> {
               'يُحفظ حسابك على هذا الجهاز فقط. لا يُرسل رمز تحقق للجوال أو البريد في النسخة الجامعية.',
               'Your account is stored only on this device. This university version does not send email or SMS verification codes.',
             ),
-            style: const TextStyle(color: muted, fontSize: 12),
+            style: TextStyle(color: appMuted(context), fontSize: 12),
           ),
           const SizedBox(height: 20),
           _submitButton(
@@ -476,10 +476,7 @@ class _AuthScreenState extends State<AuthScreen> {
               )
             : Text(
                 label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
               ),
       );
 
@@ -497,7 +494,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     s.english = !s.english;
                     s.save();
                   },
-            icon: const Icon(Icons.language, size: 18),
+            icon: Icon(Icons.language, size: 18),
             label: Text(s.english ? 'العربية' : 'English'),
           ),
           const SizedBox(width: 12),
@@ -514,13 +511,13 @@ class _AuthScreenState extends State<AuthScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Center(
+                  Center(
                     child: CircleAvatar(
                       radius: 34,
-                      backgroundColor: pale,
+                      backgroundColor: appPale(context),
                       child: Icon(
                         Icons.verified_user_rounded,
-                        color: green,
+                        color: appAccent(context, green),
                         size: 38,
                       ),
                     ),
@@ -536,7 +533,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   Text(
                     s.t('خدماتك تبدأ بحسابك', 'Your services start here'),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: muted),
+                    style: TextStyle(color: appMuted(context)),
                   ),
                   const SizedBox(height: 26),
                   Panel(
@@ -560,7 +557,10 @@ class _AuthScreenState extends State<AuthScreen> {
                                   'سجّل دخولك للوصول إلى حسابك وخدماتك.',
                                   'Sign in to access your account and services.',
                                 ),
-                          style: const TextStyle(color: muted, fontSize: 13),
+                          style: TextStyle(
+                            color: appMuted(context),
+                            fontSize: 13,
+                          ),
                         ),
                         const SizedBox(height: 24),
                         if (auth.errorCode != null) ...[
@@ -714,7 +714,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       ],
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: const Icon(Icons.lock_outline),
+        prefixIcon: Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           tooltip: _hidden[index]
               ? s.t('إظهار كلمة المرور', 'Show password')
@@ -761,7 +761,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           'ستُحدّث كلمة المرور للحساب المحلي على هذا الجهاز.',
                           'This changes the password for your local account on this device.',
                         ),
-                        style: const TextStyle(color: muted, fontSize: 13),
+                        style: TextStyle(
+                          color: appMuted(context),
+                          fontSize: 13,
+                        ),
                       ),
                       const SizedBox(height: 24),
                       if (widget.auth.errorCode != null) ...[

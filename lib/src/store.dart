@@ -186,6 +186,7 @@ class TrustStore extends ChangeNotifier {
   TrustStore({this.memoryOnly = false, this.storagePath});
   final bool memoryOnly;
   final String? storagePath;
+  bool darkMode = false;
   bool english = false,
       provider = false,
       entered = false,
@@ -283,6 +284,7 @@ class TrustStore extends ChangeNotifier {
         final restored = (j['requests'] as List)
             .map((r) => Request.fromJson(Map<String, dynamic>.from(r)))
             .toList();
+        darkMode = j['darkMode'] as bool? ?? false;
         english = j['english'];
         provider = j['provider'];
         entered = j['entered'];
@@ -355,6 +357,7 @@ class TrustStore extends ChangeNotifier {
   }
 
   Map<String, dynamic> _profile() => {
+    'darkMode': darkMode,
     'english': english,
     'notificationsEnabled': notificationsEnabled,
     'withdrawn': withdrawn,
@@ -453,6 +456,7 @@ class TrustStore extends ChangeNotifier {
         }
       }
       final profile = _profiles[_activeAccountId] as Map<String, dynamic>?;
+      darkMode = profile?['darkMode'] as bool? ?? false;
       if (profile != null) {
         english = profile['english'] as bool;
         notificationsEnabled = profile['notificationsEnabled'] as bool;
@@ -562,6 +566,7 @@ class TrustStore extends ChangeNotifier {
       _activeAccountId != null
           ? _marketplace()
           : {
+              'darkMode': darkMode,
               'english': english,
               'provider': provider,
               'entered': entered,

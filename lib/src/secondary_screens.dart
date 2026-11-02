@@ -22,7 +22,7 @@ class MessagesScreen extends StatelessWidget {
             'رسائل بين العميل ومقدم الخدمة المختار على هذا الجهاز.',
             'Messages between the customer and selected provider on this device.',
           ),
-          style: const TextStyle(color: muted, fontSize: 12),
+          style: TextStyle(color: appMuted(context), fontSize: 12),
         ),
         const SizedBox(height: 18),
         ...items.map(
@@ -32,15 +32,18 @@ class MessagesScreen extends StatelessWidget {
               padding: 4,
               child: ListTile(
                 contentPadding: const EdgeInsets.all(12),
-                leading: const CircleAvatar(
-                  backgroundColor: pale,
-                  child: Icon(Icons.chat_bubble_outline, color: green),
+                leading: CircleAvatar(
+                  backgroundColor: appPale(context),
+                  child: Icon(
+                    Icons.chat_bubble_outline,
+                    color: appAccent(context, green),
+                  ),
                 ),
                 title: Text(
                   r.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  style: TextStyle(fontWeight: FontWeight.w700),
                 ),
                 subtitle: Text(
                   r.messages.isEmpty
@@ -49,7 +52,7 @@ class MessagesScreen extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                trailing: const Icon(Icons.chevron_right),
+                trailing: Icon(Icons.chevron_right),
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute<void>(
@@ -125,10 +128,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final messages = widget.request.messages.reversed.toList();
       return Scaffold(
         appBar: AppBar(
-          title: Text(
-            widget.request.title,
-            style: const TextStyle(fontSize: 16),
-          ),
+          title: Text(widget.request.title, style: TextStyle(fontSize: 16)),
         ),
         body: SafeArea(
           child: Align(
@@ -139,7 +139,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   Container(
                     width: double.infinity,
-                    color: pale,
+                    color: appPale(context),
                     padding: const EdgeInsets.all(12),
                     child: Text(
                       s.t(
@@ -147,7 +147,10 @@ class _ChatScreenState extends State<ChatScreen> {
                         'Local demo chat • Switch roles to reply as the other party',
                       ),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 11, color: green),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: appAccent(context, green),
+                      ),
                     ),
                   ),
                   Expanded(
@@ -182,7 +185,11 @@ class _ChatScreenState extends State<ChatScreen> {
                                   margin: const EdgeInsets.only(bottom: 12),
                                   padding: const EdgeInsets.all(14),
                                   decoration: BoxDecoration(
-                                    color: mine ? green : Colors.white,
+                                    color: mine
+                                        ? green
+                                        : Theme.of(context)
+                                              .colorScheme
+                                              .surfaceContainer,
                                     borderRadius: BorderRadius.circular(18),
                                   ),
                                   child: Column(
@@ -192,7 +199,9 @@ class _ChatScreenState extends State<ChatScreen> {
                                       Text(
                                         m.text,
                                         style: TextStyle(
-                                          color: mine ? Colors.white : ink,
+                                          color: mine
+                                              ? Colors.white
+                                              : appInk(context),
                                         ),
                                       ),
                                       const SizedBox(height: 5),
@@ -202,7 +211,9 @@ class _ChatScreenState extends State<ChatScreen> {
                                             : '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}',
                                         style: TextStyle(
                                           fontSize: 10,
-                                          color: mine ? Colors.white70 : muted,
+                                          color: mine
+                                              ? Colors.white70
+                                              : appMuted(context),
                                         ),
                                       ),
                                     ],
@@ -234,7 +245,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         IconButton.filled(
                           tooltip: s.t('إرسال', 'Send'),
                           onPressed: send,
-                          icon: const Icon(Icons.send_rounded),
+                          icon: Icon(Icons.send_rounded),
                         ),
                       ],
                     ),
@@ -284,12 +295,15 @@ class NotificationsScreen extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 10),
               child: Panel(
                 color: e.key < store.notifications.length - store.readCount
-                    ? pale
+                    ? appPale(context)
                     : Colors.white,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.notifications_outlined, color: green),
+                    Icon(
+                      Icons.notifications_outlined,
+                      color: appAccent(context, green),
+                    ),
                     const SizedBox(width: 14),
                     Expanded(child: Text(e.value)),
                   ],
@@ -344,19 +358,19 @@ class WalletScreen extends StatelessWidget {
                           ? 'Available demo balance'
                           : 'Demo balance held in escrow',
                     ),
-                    style: const TextStyle(color: Colors.white70),
+                    style: TextStyle(color: Colors.white70),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     s.money(s.provider ? s.available : s.held),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 34,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Icon(
+                  Icon(
                     Icons.account_balance_wallet_outlined,
                     color: Color(0xFFC9A227),
                   ),
@@ -369,7 +383,7 @@ class WalletScreen extends StatelessWidget {
                 'هذه محاكاة فقط. لا يوجد ربط ببوابة دفع أو حساب بنكي.',
                 'Simulation only. No payment gateway or bank account is connected.',
               ),
-              style: const TextStyle(color: muted),
+              style: TextStyle(color: appMuted(context)),
             ),
             if (s.provider) ...[
               const SizedBox(height: 16),
@@ -419,7 +433,7 @@ class WalletScreen extends StatelessWidget {
                     children: [
                       Text(
                         r.title,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                        style: TextStyle(fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 12),
                       Row(
@@ -428,7 +442,7 @@ class WalletScreen extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(
                             s.money(r.total),
-                            style: const TextStyle(fontWeight: FontWeight.w800),
+                            style: TextStyle(fontWeight: FontWeight.w800),
                           ),
                         ],
                       ),
@@ -440,7 +454,10 @@ class WalletScreen extends StatelessWidget {
                               'صافي مقدم الخدمة: ${s.money((r.selected!.amount * .9).round())}',
                               'Provider net: ${s.money((r.selected!.amount * .9).round())}',
                             ),
-                            style: const TextStyle(color: green, fontSize: 12),
+                            style: TextStyle(
+                              color: appAccent(context, green),
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                     ],
@@ -473,7 +490,7 @@ class DocumentsScreen extends StatelessWidget {
               'مرفقات محفوظة على هذا الجهاز. أضف المستندات أثناء إنشاء الطلب.',
               'Attachments stored on this device. Add documents when creating a request.',
             ),
-            style: const TextStyle(color: muted),
+            style: TextStyle(color: appMuted(context)),
           ),
           const SizedBox(height: 20),
           if (docs.isEmpty)
@@ -532,7 +549,10 @@ class DocumentTile extends StatelessWidget {
     child: Panel(
       padding: 6,
       child: ListTile(
-        leading: const Icon(Icons.description_outlined, color: green),
+        leading: Icon(
+          Icons.description_outlined,
+          color: appAccent(context, green),
+        ),
         title: Text(
           document.name,
           maxLines: 2,
@@ -542,7 +562,7 @@ class DocumentTile extends StatelessWidget {
         trailing: IconButton(
           tooltip: store.t('حفظ نسخة', 'Save a copy'),
           onPressed: () => export(context),
-          icon: const Icon(Icons.download_outlined),
+          icon: Icon(Icons.download_outlined),
         ),
       ),
     ),
@@ -637,7 +657,11 @@ class InfoScreen extends StatelessWidget {
     body: PageBody(
       children: [
         const SizedBox(height: 20),
-        const Icon(Icons.verified_user_outlined, size: 64, color: green),
+        Icon(
+          Icons.verified_user_outlined,
+          size: 64,
+          color: appAccent(context, green),
+        ),
         const SizedBox(height: 28),
         Panel(child: Text(body)),
       ],

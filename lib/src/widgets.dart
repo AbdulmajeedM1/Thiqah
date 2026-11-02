@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
 
 import 'store.dart';
+import 'motion.dart';
 
 const green = Color(0xFF0B6E4F);
-const pale = Color(0xFFE9F6F1);
+Color appAccent(BuildContext context, Color color) =>
+    Theme.of(context).brightness == Brightness.dark
+    ? HSLColor.fromColor(color).withLightness(.72).toColor()
+    : color;
+Color appPale(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark
+    ? const Color(0xFF203D32)
+    : const Color(0xFFE9F6F1);
+Color appInk(BuildContext context) => Theme.of(context).colorScheme.onSurface;
 const ink = Color(0xFF063D2C);
-const muted = Color(0xFF6B7775);
+Color appMuted(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark
+    ? const Color(0xFFB3C2BB)
+    : const Color(0xFF6B7775);
 const categoryIcons = [
   Icons.badge_outlined,
   Icons.storefront_outlined,
@@ -16,21 +28,22 @@ const categoryIcons = [
 ];
 
 class Panel extends StatelessWidget {
-  const Panel({
-    super.key,
-    required this.child,
-    this.color = Colors.white,
-    this.padding = 20,
-  });
+  const Panel({super.key, required this.child, this.color, this.padding = 20});
   final Widget child;
-  final Color color;
+  final Color? color;
   final double padding;
   @override
   Widget build(BuildContext context) => Material(
-    color: color,
+    color: Theme.of(context).brightness == Brightness.dark
+        ? (color == null || color == Colors.white
+              ? Theme.of(context).colorScheme.surfaceContainer
+              : color!.computeLuminance() > .5
+              ? Theme.of(context).colorScheme.surfaceContainerHigh
+              : color)
+        : color ?? Colors.white,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(22),
-      side: const BorderSide(color: Color(0xFFE4E7E6)),
+      side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
     ),
     child: SizedBox(
       width: double.infinity,
@@ -68,7 +81,7 @@ class StatusBadge extends StatelessWidget {
       Stage.disputed => const Color(0xFFC0392B),
       Stage.payment || Stage.confirmation => const Color(0xFF946200),
       Stage.active => const Color(0xFF2D6CDF),
-      Stage.cancelled || Stage.draft => muted,
+      Stage.cancelled || Stage.draft => appMuted(context),
       _ => green,
     };
     return Container(
@@ -80,7 +93,7 @@ class StatusBadge extends StatelessWidget {
       child: Text(
         store.status(stage),
         style: TextStyle(
-          color: color,
+          color: appAccent(context, color),
           fontSize: 12,
           fontWeight: FontWeight.w700,
         ),
@@ -98,7 +111,7 @@ class RequestTile extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
     child: Material(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surfaceContainer,
       borderRadius: BorderRadius.circular(22),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -112,16 +125,19 @@ class RequestTile extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: pale,
+                      color: appPale(context),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Icon(categoryIcons[request.category], color: green),
+                    child: Icon(
+                      categoryIcons[request.category],
+                      color: appAccent(context, green),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       store.category(request.category),
-                      style: const TextStyle(color: muted, fontSize: 12),
+                      style: TextStyle(color: appMuted(context), fontSize: 12),
                     ),
                   ),
                   StatusBadge(store, request.stage),
@@ -137,7 +153,7 @@ class RequestTile extends StatelessWidget {
                 request.description,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: muted, fontSize: 13),
+                style: TextStyle(color: appMuted(context), fontSize: 13),
               ),
               const SizedBox(height: 16),
               const Divider(height: 1),
@@ -148,18 +164,18 @@ class RequestTile extends StatelessWidget {
                 children: [
                   Text(
                     '⌖ ${request.city}',
-                    style: const TextStyle(color: muted, fontSize: 12),
+                    style: TextStyle(color: appMuted(context), fontSize: 12),
                   ),
                   Text(
                     store.t(
                       '${request.offers.length} عروض',
                       '${request.offers.length} offers',
                     ),
-                    style: const TextStyle(color: green),
+                    style: TextStyle(color: appAccent(context, green)),
                   ),
                   Text(
                     store.money(request.budget),
-                    style: const TextStyle(fontWeight: FontWeight.w800),
+                    style: TextStyle(fontWeight: FontWeight.w800),
                   ),
                 ],
               ),
@@ -186,14 +202,14 @@ class EmptyView extends StatelessWidget {
     child: Center(
       child: Column(
         children: [
-          Icon(icon, size: 54, color: green),
+          Icon(icon, size: 54, color: appAccent(context, green)),
           const SizedBox(height: 16),
           Text(title, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: muted),
+            style: TextStyle(color: appMuted(context)),
           ),
         ],
       ),
@@ -202,8 +218,9 @@ class EmptyView extends StatelessWidget {
 }
 
 class PageBody extends StatelessWidget {
-  const PageBody({super.key, required this.children});
+  const PageBody({super.key, required this.children, this.animate = false});
   final List<Widget> children;
+  final bool animate;
   @override
   Widget build(BuildContext context) => Align(
     alignment: Alignment.topCenter,
@@ -211,7 +228,12 @@ class PageBody extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 720),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-        children: children,
+        children: animate
+            ? [
+                for (var i = 0; i < children.length; i++)
+                  Entrance(delay: i.clamp(0, 5) * 45, child: children[i]),
+              ]
+            : children,
       ),
     ),
   );

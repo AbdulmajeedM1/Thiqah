@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'src/store.dart';
+import 'src/theme.dart';
 import 'src/app.dart';
 import 'src/auth.dart';
 import 'src/local_auth.dart';
 import 'src/auth_screens.dart';
 import 'src/admin_screen.dart';
+import 'src/motion.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,10 +27,19 @@ Future<void> main() async {
   await auth.restore();
 }
 
-class TrustApp extends StatelessWidget {
+class TrustApp extends StatefulWidget {
   const TrustApp({super.key, required this.store, this.auth});
   final TrustStore store;
   final AuthController? auth;
+
+  @override
+  State<TrustApp> createState() => _TrustAppState();
+}
+
+class _TrustAppState extends State<TrustApp> {
+  bool launchFinished = false;
+  TrustStore get store => widget.store;
+  AuthController? get auth => widget.auth;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -40,49 +51,13 @@ class TrustApp extends StatelessWidget {
       locale: Locale(store.english ? 'en' : 'ar'),
       supportedLocales: const [Locale('ar'), Locale('en')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      theme: ThemeData(
-        fontFamily: 'Tajawal',
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0B6E4F)),
-        scaffoldBackgroundColor: const Color(0xFFF7F8F7),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFF7F8F7),
-          centerTitle: false,
-          scrolledUnderElevation: 0,
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFFE4E7E6)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFFE4E7E6)),
-          ),
-          contentPadding: const EdgeInsets.all(18),
-        ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF0B6E4F),
-            foregroundColor: Colors.white,
-            minimumSize: const Size(0, 52),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-        ),
-        textTheme: const TextTheme(
-          headlineMedium: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF063D2C),
-          ),
-          titleLarge: TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
-          titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-          bodyMedium: TextStyle(fontSize: 14, height: 1.65),
-        ),
+      theme: trustTheme(Brightness.light),
+      darkTheme: trustTheme(Brightness.dark),
+      themeMode: store.darkMode ? ThemeMode.dark : ThemeMode.light,
+      builder: (context, child) => LaunchIntro(
+        enabled: !launchFinished,
+        onComplete: () => setState(() => launchFinished = true),
+        child: child!,
       ),
       home: auth == null
           ? (store.memoryOnly

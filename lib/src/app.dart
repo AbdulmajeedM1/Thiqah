@@ -6,6 +6,8 @@ import 'request_screens.dart';
 import 'secondary_screens.dart';
 import 'auth.dart';
 import 'auth_screens.dart';
+import 'help_screen.dart';
+import 'motion.dart';
 
 class TrustShell extends StatefulWidget {
   const TrustShell({super.key, required this.store, this.auth});
@@ -17,6 +19,7 @@ class TrustShell extends StatefulWidget {
 
 class _TrustShellState extends State<TrustShell> {
   int tab = 0;
+  bool homeEntranceShown = false;
   String query = '';
   Stage? filter;
   int? category;
@@ -33,12 +36,16 @@ class _TrustShellState extends State<TrustShell> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.verified_user_rounded, color: green, size: 30),
+            Icon(
+              Icons.verified_user_rounded,
+              color: appAccent(context, green),
+              size: 30,
+            ),
             const SizedBox(width: 8),
             Text(
               s.t('ثقة', 'TRUST'),
-              style: const TextStyle(
-                color: ink,
+              style: TextStyle(
+                color: appInk(context),
                 fontWeight: FontWeight.w900,
                 fontSize: 27,
               ),
@@ -51,7 +58,7 @@ class _TrustShellState extends State<TrustShell> {
             onPressed: () => open(NotificationsScreen(store: s)),
             icon: Badge(
               isLabelVisible: s.notifications.length > s.readCount,
-              child: const Icon(Icons.notifications_none_rounded),
+              child: Icon(Icons.notifications_none_rounded),
             ),
           ),
           const SizedBox(width: 12),
@@ -71,7 +78,7 @@ class _TrustShellState extends State<TrustShell> {
                   'Demo • Local data • No real payments',
                 ),
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 11, color: Color(0xFF755300)),
+                style: TextStyle(fontSize: 11, color: Color(0xFF755300)),
               ),
             ),
             if (s.storageError != null)
@@ -85,52 +92,98 @@ class _TrustShellState extends State<TrustShell> {
                 ],
               ),
             Expanded(
-              child: switch (tab) {
-                0 => home(),
-                1 => requests(),
-                2 => MessagesScreen(store: s, embedded: true),
-                _ => account(),
-              },
+              child: TabTransition(
+                index: tab,
+                child: switch (tab) {
+                  0 => home(),
+                  1 => requests(),
+                  2 => MessagesScreen(store: s, embedded: true),
+                  _ => account(),
+                },
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButton: tab <= 1 && !s.provider
+      floatingActionButtonLocation: tab == 0
+          ? FloatingActionButtonLocation.centerFloat
+          : FloatingActionButtonLocation.endFloat,
+      floatingActionButton: tab == 0
+          ? SizedBox(
+              width: MediaQuery.sizeOf(context).width - 32,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  FloatingActionButton.small(
+                    key: const ValueKey('home-help'),
+                    heroTag: 'home-help',
+                    tooltip: s.t('المساعدة والأسئلة الشائعة', 'Help and FAQs'),
+                    onPressed: () => open(HelpScreen(store: s)),
+                    child: const Icon(Icons.help_outline_rounded),
+                  ),
+                  if (!s.provider)
+                    FloatingActionButton.extended(
+                      heroTag: 'new-request',
+                      onPressed: () => open(NewRequestScreen(store: s)),
+                      backgroundColor: green,
+                      foregroundColor: Colors.white,
+                      icon: const Icon(Icons.add),
+                      label: Text(s.t('طلب جديد', 'New request')),
+                    ),
+                ],
+              ),
+            )
+          : tab == 1 && !s.provider
           ? FloatingActionButton.extended(
               onPressed: () => open(NewRequestScreen(store: s)),
               backgroundColor: green,
               foregroundColor: Colors.white,
-              icon: const Icon(Icons.add),
+              icon: Icon(Icons.add),
               label: Text(s.t('طلب جديد', 'New request')),
             )
           : null,
       bottomNavigationBar: NavigationBar(
         selectedIndex: tab,
-        onDestinationSelected: (i) => setState(() => tab = i),
-        backgroundColor: Colors.white,
-        indicatorColor: pale,
+        onDestinationSelected: (i) {
+          if (i == tab) return;
+          setState(() {
+            if (tab == 0) homeEntranceShown = true;
+            tab = i;
+          });
+        },
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+        indicatorColor: appPale(context),
         destinations: [
           NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home_rounded, color: green),
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(
+              Icons.home_rounded,
+              color: appAccent(context, green),
+            ),
             label: s.t('الرئيسية', 'Home'),
           ),
           NavigationDestination(
-            icon: const Icon(Icons.description_outlined),
-            selectedIcon: const Icon(Icons.description, color: green),
+            icon: Icon(Icons.description_outlined),
+            selectedIcon: Icon(
+              Icons.description,
+              color: appAccent(context, green),
+            ),
             label: s.t(
               s.provider ? 'الطلبات' : 'طلباتي',
               s.provider ? 'Requests' : 'My requests',
             ),
           ),
           NavigationDestination(
-            icon: const Icon(Icons.chat_bubble_outline_rounded),
-            selectedIcon: const Icon(Icons.chat_bubble, color: green),
+            icon: Icon(Icons.chat_bubble_outline_rounded),
+            selectedIcon: Icon(
+              Icons.chat_bubble,
+              color: appAccent(context, green),
+            ),
             label: s.t('الرسائل', 'Messages'),
           ),
           NavigationDestination(
-            icon: const Icon(Icons.person_outline_rounded),
-            selectedIcon: const Icon(Icons.person, color: green),
+            icon: Icon(Icons.person_outline_rounded),
+            selectedIcon: Icon(Icons.person, color: appAccent(context, green)),
             label: s.t('حسابي', 'Account'),
           ),
         ],
@@ -143,11 +196,12 @@ class _TrustShellState extends State<TrustShell> {
         .where((r) => [Stage.active, Stage.confirmation].contains(r.stage))
         .length;
     return PageBody(
+      animate: !homeEntranceShown,
       children: [
         const SizedBox(height: 12),
         Text(
           s.t('أهلًا ${s.name} 👋', 'Hello, ${s.name} 👋'),
-          style: const TextStyle(color: muted),
+          style: TextStyle(color: appMuted(context)),
         ),
         const SizedBox(height: 6),
         Text(
@@ -175,15 +229,12 @@ class _TrustShellState extends State<TrustShell> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.shield_outlined, color: Color(0xFFC9A227)),
+                  Icon(Icons.shield_outlined, color: Color(0xFFC9A227)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       s.t('راحة بالك تبدأ هنا', 'Peace of mind starts here'),
-                      style: const TextStyle(
-                        color: Color(0xFFBCE5D5),
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Color(0xFFBCE5D5), fontSize: 12),
                     ),
                   ),
                 ],
@@ -196,7 +247,7 @@ class _TrustShellState extends State<TrustShell> {
                       ? 'Put your expertise to work'
                       : 'Leave the paperwork to us',
                 ),
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
@@ -212,7 +263,7 @@ class _TrustShellState extends State<TrustShell> {
                       ? 'Find requests, submit offers and manage your jobs in one place.'
                       : 'Choose a service, compare offers and track every step.',
                 ),
-                style: const TextStyle(color: Color(0xFFDAEDE5)),
+                style: TextStyle(color: Color(0xFFDAEDE5)),
               ),
               const SizedBox(height: 20),
               FilledButton.icon(
@@ -271,7 +322,7 @@ class _TrustShellState extends State<TrustShell> {
               mainAxisSpacing: 10,
             ),
             itemBuilder: (context, i) => Material(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surfaceContainer,
               borderRadius: BorderRadius.circular(18),
               child: InkWell(
                 borderRadius: BorderRadius.circular(18),
@@ -290,12 +341,16 @@ class _TrustShellState extends State<TrustShell> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(categoryIcons[i], size: 29, color: green),
+                      Icon(
+                        categoryIcons[i],
+                        size: 29,
+                        color: appAccent(context, green),
+                      ),
                       const SizedBox(height: 10),
                       Text(
                         s.category(i),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -336,17 +391,17 @@ class _TrustShellState extends State<TrustShell> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: green, size: 22),
+        Icon(icon, color: appAccent(context, green), size: 22),
         const SizedBox(height: 10),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w800,
-            color: ink,
+            color: appInk(context),
           ),
         ),
-        Text(label, style: const TextStyle(fontSize: 12, color: muted)),
+        Text(label, style: TextStyle(fontSize: 12, color: appMuted(context))),
       ],
     ),
   );
@@ -377,7 +432,7 @@ class _TrustShellState extends State<TrustShell> {
               'ابحث بالعنوان أو المدينة',
               'Search by title or city',
             ),
-            prefixIcon: const Icon(Icons.search),
+            prefixIcon: Icon(Icons.search),
           ),
         ),
         const SizedBox(height: 14),
@@ -437,10 +492,13 @@ class _TrustShellState extends State<TrustShell> {
           children: [
             CircleAvatar(
               radius: 30,
-              backgroundColor: pale,
+              backgroundColor: appPale(context),
               child: Text(
                 s.name.characters.first,
-                style: const TextStyle(fontSize: 26, color: green),
+                style: TextStyle(
+                  fontSize: 26,
+                  color: appAccent(context, green),
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -454,7 +512,7 @@ class _TrustShellState extends State<TrustShell> {
                       s.provider ? 'حساب مقدم خدمة' : 'حساب عميل',
                       s.provider ? 'Provider account' : 'Customer account',
                     ),
-                    style: const TextStyle(color: muted, fontSize: 12),
+                    style: TextStyle(color: appMuted(context), fontSize: 12),
                   ),
                 ],
               ),
@@ -519,7 +577,7 @@ class _TrustShellState extends State<TrustShell> {
           children: [
             SwitchListTile(
               title: Text(s.t('English / الإنجليزية', 'العربية / Arabic')),
-              secondary: const Icon(Icons.language),
+              secondary: Icon(Icons.language),
               value: s.english,
               onChanged: (v) {
                 s.english = v;
@@ -527,10 +585,20 @@ class _TrustShellState extends State<TrustShell> {
               },
             ),
             SwitchListTile(
+              key: const ValueKey('dark-mode-switch'),
+              title: Text(s.t('الوضع الداكن', 'Dark mode')),
+              secondary: Icon(Icons.dark_mode_outlined),
+              value: s.darkMode,
+              onChanged: (value) {
+                s.darkMode = value;
+                s.save();
+              },
+            ),
+            SwitchListTile(
               title: Text(
                 s.t('الإشعارات داخل التطبيق', 'In-app notifications'),
               ),
-              secondary: const Icon(Icons.notifications_outlined),
+              secondary: Icon(Icons.notifications_outlined),
               value: s.notificationsEnabled,
               onChanged: (v) {
                 s.notificationsEnabled = v;
@@ -590,22 +658,26 @@ class _TrustShellState extends State<TrustShell> {
             s.save();
           }
         },
-        icon: const Icon(Icons.logout),
+        icon: Icon(Icons.logout),
         label: Text(s.t('تسجيل الخروج', 'Sign out')),
       ),
       const SizedBox(height: 8),
-      const Text(
+      Text(
         'THIQAH  /  1.0.0',
         textAlign: TextAlign.center,
-        style: TextStyle(color: muted, fontSize: 11, letterSpacing: 3),
+        style: TextStyle(
+          color: appMuted(context),
+          fontSize: 11,
+          letterSpacing: 3,
+        ),
       ),
     ],
   );
 
   Widget setting(IconData icon, String title, VoidCallback tap) => ListTile(
-    leading: Icon(icon, color: green),
-    title: Text(title, style: const TextStyle(fontSize: 14)),
-    trailing: const Icon(Icons.chevron_right, size: 20),
+    leading: Icon(icon, color: appAccent(context, green)),
+    title: Text(title, style: TextStyle(fontSize: 14)),
+    trailing: Icon(Icons.chevron_right, size: 20),
     onTap: tap,
   );
 }
@@ -639,7 +711,7 @@ class WelcomeScreen extends StatelessWidget {
                   color: green,
                   borderRadius: BorderRadius.circular(32),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.verified_user_rounded,
                   color: Colors.white,
                   size: 64,
@@ -650,17 +722,21 @@ class WelcomeScreen extends StatelessWidget {
             Text(
               s.t('ثقة', 'TRUST'),
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 52,
                 fontWeight: FontWeight.w900,
-                color: ink,
+                color: appInk(context),
               ),
             ),
-            const Text(
+            Text(
               'YOUR TRUST. OUR COMMITMENT.',
               textDirection: TextDirection.ltr,
               textAlign: TextAlign.center,
-              style: TextStyle(letterSpacing: 2, fontSize: 10, color: muted),
+              style: TextStyle(
+                letterSpacing: 2,
+                fontSize: 10,
+                color: appMuted(context),
+              ),
             ),
             const SizedBox(height: 34),
             Text(
@@ -678,7 +754,7 @@ class WelcomeScreen extends StatelessWidget {
                 'One place to find service providers and follow your request from start to finish.',
               ),
               textAlign: TextAlign.center,
-              style: const TextStyle(color: muted),
+              style: TextStyle(color: appMuted(context)),
             ),
             const SizedBox(height: 32),
             Panel(

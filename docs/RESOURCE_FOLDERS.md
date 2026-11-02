@@ -15,6 +15,11 @@ The repository contains the Flutter university-project edition of **Thiqah / Tru
 | `lib/src/secondary_screens.dart` | Chat, notifications, documents, profile and simulated wallet. |
 | `lib/src/number_input.dart` | Arabic, Persian and Western numeric input normalization. |
 | `lib/src/widgets.dart` | Reusable UI elements. |
+| `lib/src/theme.dart` | Light and dark themes and page transition configuration. |
+| `lib/src/motion.dart` | Three-second launch animation, page/tab transitions and reduced-motion support. |
+| `lib/src/help_screen.dart` | Role-specific service guides and expandable FAQs. |
+| `lib/src/request_progress.dart` | Request milestones, next-step guidance and paused/closed states. |
+| `lib/src/provider_screen.dart` | Public provider statistics, categories and customer reviews. |
 | `assets/fonts/` | Bundled Tajawal fonts and their SIL Open Font License. |
 | `assets/demo_admin.json` | Generated local administrator seed. Not published to GitHub; created with `tool/create_demo_admin.dart`. |
 | `tool/` | Local administrator setup utility. |
