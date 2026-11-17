@@ -11,9 +11,23 @@ import 'src/admin_screen.dart';
 import 'src/motion.dart';
 import 'src/remote_api.dart';
 import 'src/remote_store.dart';
+import 'src/local_export.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  const exportLocal = bool.fromEnvironment('THIQAH_EXPORT_LOCAL');
+  if (exportLocal) {
+    runApp(
+      MaterialApp(
+        theme: trustTheme(Brightness.light),
+        locale: const Locale('ar'),
+        supportedLocales: const [Locale('ar')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        home: LocalExportScreen(saveInternally: exportLocal),
+      ),
+    );
+    return;
+  }
   const offline = bool.fromEnvironment('THIQAH_OFFLINE');
   final api = RemoteApi();
   final store = offline ? TrustStore() : RemoteStore(api);

@@ -57,3 +57,7 @@ assets/demo_admin.json
 
 # Local UI captures can contain user/account data
 /screenshots/
+/server/node_modules/
+/server/build/
+*migration-export*.json
+*local-migration*.json

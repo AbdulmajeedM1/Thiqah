@@ -552,8 +552,8 @@ class _AuthScreenState extends State<AuthScreen> {
                     const SizedBox(height: 12),
                     Text(
                       s.t(
-                        'حسابك السحابي يعمل على جميع أجهزتك. أنشئ حسابًا جديدًا إذا كنت تستخدم النسخة المحلية سابقًا.',
-                        'Your cloud account works across devices. Create a new account if you previously used the local version.',
+                        'حسابك السحابي يعمل على جميع أجهزتك. للحسابات المنقولة، استخدم اسم المستخدم وكلمة المرور السابقة.',
+                        'Your cloud account works across devices. Migrated accounts use their existing username and password.',
                       ),
                       textAlign: TextAlign.center,
                       style: TextStyle(color: appMuted(context), fontSize: 12),

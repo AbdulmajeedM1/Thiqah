@@ -2,10 +2,18 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
 import worker from "./worker.mjs";
+import { migrationRoutes } from "./migration.mjs";
+import { createHash, pbkdf2Sync } from "node:crypto";
 const sql = new DatabaseSync(":memory:");
 sql.exec(
   readFileSync(
     new URL("./drizzle/0000_shared_marketplace.sql", import.meta.url),
+    "utf8",
+  ),
+);
+sql.exec(
+  readFileSync(
+    new URL("./drizzle/0001_local_migration.sql", import.meta.url),
     "utf8",
   ),
 );
@@ -46,9 +54,12 @@ const env = {
     },
   },
   BUCKET: {
-    put: async (id, stream) =>
-      objects.set(id, await new Response(stream).arrayBuffer()),
-    get: async (id) => (objects.has(id) ? { body: objects.get(id) } : null),
+    put: async (id, stream, options = {}) => {
+      const body = await new Response(stream).arrayBuffer();
+      objects.set(id, { body, size: body.byteLength, ...options });
+    },
+    head: async (id) => objects.get(id) ?? null,
+    get: async (id) => objects.get(id) ?? null,
     delete: async (id) => objects.delete(id),
   },
   ASSETS: { fetch: () => new Response("app") },
@@ -310,4 +321,163 @@ assert.equal(
 );
 console.log(
   "PASS shared accounts, concurrent offers, ownership, lifecycle, idempotency, files, password rotation, and cross-session persistence",
+);
+
+const migrationKey = "test-only-migration-secret";
+const sourceId = "a".repeat(32);
+env.MIGRATION_KEY_SHA256 = createHash("sha256")
+  .update(migrationKey)
+  .digest("hex");
+env.MIGRATION_SOURCE_ID = sourceId;
+env.MIGRATION_EXPIRES_AT = String(Date.now() + 60000);
+const salt = Buffer.alloc(16, 7);
+const legacyPassword = "Original-password-123";
+const passwordHash = pbkdf2Sync(
+  legacyPassword,
+  salt,
+  600000,
+  32,
+  "sha256",
+).toString("base64url");
+const accounts = ["customer", "provider", "admin"].map((role, index) => ({
+  id: role,
+  role,
+  username: "legacy" + role,
+  email: role + "@legacy.example",
+  phone: "+96650000100" + index,
+  fullName: "Legacy " + role,
+  city: "Riyadh",
+  status: "active",
+  createdAt: new Date().toISOString(),
+  iterations: 600000,
+  salt: salt.toString("base64url"),
+  passwordHash,
+}));
+const bytes = Buffer.from("original attachment");
+const snapshot = {
+  version: 1,
+  sourceId,
+  accounts,
+  missingFiles: [],
+  files: {
+    "/old/file.pdf": {
+      name: "file.pdf",
+      size: bytes.length,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    },
+  },
+  marketplace: {
+    profiles: { provider: { withdrawn: 120 } },
+    requests: [
+      {
+        ...input,
+        id: "old-request",
+        customerId: "customer",
+        stage: "completed",
+        offers: [{ id: "offer1", providerId: "provider", amount: 10000 }],
+        selectedId: "offer1",
+        documents: [{ name: "file.pdf", path: "/old/file.pdf" }],
+        messages: [{ text: "Original message" }],
+        timeline: [{ text: "Original event" }],
+      },
+    ],
+  },
+};
+async function migrate(path, body, key = migrationKey) {
+  const isForm = body instanceof FormData;
+  try {
+    const result = await migrationRoutes(
+      new Request("https://test.local/api/migration/" + path, {
+        method: body ? "POST" : "GET",
+        headers: {
+          "X-Migration-Key": key,
+          ...(!isForm && body ? { "Content-Type": "application/json" } : {}),
+        },
+        body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
+      }),
+      env,
+      "/migration/" + path,
+    );
+    return { status: result.status, data: await result.json() };
+  } catch (error) {
+    return { status: error.status ?? 500, data: { error: error.message } };
+  }
+}
+assert.equal((await call("/migration/status")).status, 403);
+assert.equal((await migrate("preview", snapshot, "")).status, 403);
+assert.equal((await migrate("preview", snapshot)).data.accounts, 3);
+assert.equal(
+  sql.prepare("SELECT COUNT(*) AS n FROM migration_runs").get().n,
+  0,
+);
+assert.equal(
+  (await migrate("import", snapshot)).data.error,
+  "missing_staged_file",
+);
+const migrationFile = new FormData();
+migrationFile.set("sourceId", sourceId);
+migrationFile.set("path", "/old/file.pdf");
+migrationFile.set("file", new File([bytes], "file.pdf"));
+assert.equal((await migrate("file", migrationFile)).status, 200);
+const imported = await migrate("import", snapshot);
+assert.equal(imported.status, 200, JSON.stringify(imported.data));
+assert.equal((await migrate("import", snapshot)).data.completed, true);
+assert.equal(
+  sql.prepare("SELECT COUNT(*) AS n FROM migration_runs").get().n,
+  1,
+);
+for (const account of accounts) {
+  const login = await call("/auth/login", "POST", {
+    login: account.username,
+    password: legacyPassword,
+  });
+  assert.equal(login.status, 200, JSON.stringify(login.data));
+  assert.equal(login.data.user.role, account.role);
+  if (account.role === "admin")
+    assert.equal(
+      (await call("/admin/users", "GET", undefined, login.data.token)).status,
+      200,
+    );
+  if (account.role === "provider") {
+    const records = (
+      await call("/marketplace", "GET", undefined, login.data.token)
+    ).data.requests;
+    const record = records.find(
+      (r) => r.id === imported.data.result.requestIds[0],
+    );
+    assert.equal(record.offers[0].providerId, login.data.user.id);
+    assert.equal(record.messages[0].text, "Original message");
+    const download = await worker.fetch(
+      new Request(
+        "https://test.local/api/uploads/" + imported.data.result.fileIds[0],
+        { headers: { Authorization: "Bearer " + login.data.token } },
+      ),
+      env,
+    );
+    assert.equal(await download.text(), bytes.toString());
+    assert.equal(
+      sql
+        .prepare("SELECT withdrawn FROM profiles WHERE user_id=?")
+        .get(login.data.user.id).withdrawn,
+      120,
+    );
+    const rotated = await call(
+      "/auth/password",
+      "POST",
+      { currentPassword: legacyPassword, newPassword: "Updated-password-456" },
+      login.data.token,
+    );
+    assert.equal(rotated.status, 200);
+    assert.equal(
+      sql
+        .prepare("SELECT legacy_iterations FROM accounts WHERE id=?")
+        .get(login.data.user.id).legacy_iterations,
+      0,
+    );
+  }
+}
+env.MIGRATION_EXPIRES_AT = "0";
+assert.equal((await migrate("status")).status, 403);
+console.log(
+  "PASS legacy 600000-round passwords, atomic import, retries, ownership, attachments, profiles and administrator access",
 );

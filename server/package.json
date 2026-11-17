@@ -1,0 +1,1 @@
+{"name":"thiqah-server","private":true,"type":"module","scripts":{"build":"esbuild worker.mjs --bundle --format=esm --platform=browser --outfile=build/index.js","test":"node worker.test.mjs"},"dependencies":{"@noble/hashes":"2.0.1"},"devDependencies":{"esbuild":"0.25.12"}}

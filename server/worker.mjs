@@ -1,3 +1,5 @@
+import { verifyLegacyPassword } from "./legacy_password.mjs";
+
 const encoder = new TextEncoder();
 const MAX_FILE = 25 * 1024 * 1024;
 const fail = (code, status = 400) => {
@@ -38,7 +40,7 @@ const publicUser = (row) => ({
   email: row.email,
   phone: row.phone,
   city: row.city,
-  role: row.role,
+  role: row.is_admin ? "admin" : row.role,
   status: row.status,
   createdAt: row.created_at,
 });
@@ -70,6 +72,7 @@ function passwordValue(value) {
   return value;
 }
 async function verify(password, account) {
+  if (account.legacy_iterations) return verifyLegacyPassword(password, account);
   const actual = await passwordHash(password, account.salt);
   let difference = actual.length ^ account.password_hash.length;
   for (let i = 0; i < actual.length; i++)
@@ -243,7 +246,7 @@ async function authRoutes(request, env, path) {
     await db.batch([
       stmt(
         db,
-        "UPDATE accounts SET password_hash=?,salt=? WHERE id=?",
+        "UPDATE accounts SET password_hash=?,salt=?,legacy_iterations=0 WHERE id=?",
         derived,
         salt,
         user.id,
@@ -525,8 +528,35 @@ async function mutateRequest(env, user, id, input) {
 
 async function api(request, env, path) {
   if (path === "/health") return json({ ok: true });
+  if (path.startsWith("/migration/")) fail("forbidden", 403);
   if (path.startsWith("/auth/")) return authRoutes(request, env, path);
   const user = await authorize(request, env.DB);
+  if (path === "/admin/users" && request.method === "GET") {
+    require(user.is_admin === 1);
+    const rows = await stmt(
+      env.DB,
+      "SELECT * FROM accounts ORDER BY created_at DESC",
+    ).all();
+    return json({ users: rows.results.map(publicUser) });
+  }
+  if (path.startsWith("/admin/users/") && request.method === "PATCH") {
+    require(user.is_admin === 1);
+    const id = decodeURIComponent(path.slice("/admin/users/".length));
+    const input = await body(request);
+    if (!["active", "suspended"].includes(input.status)) fail("invalid_input");
+    const target = await stmt(
+      env.DB,
+      "SELECT is_admin FROM accounts WHERE id=?",
+      id,
+    ).first();
+    if (!target) fail("not_found", 404);
+    if (target.is_admin) fail("protected_account", 403);
+    await env.DB.batch([
+      stmt(env.DB, "UPDATE accounts SET status=? WHERE id=?", input.status, id),
+      stmt(env.DB, "DELETE FROM sessions WHERE user_id=?", id),
+    ]);
+    return json({});
+  }
   if (path === "/marketplace" && request.method === "GET")
     return json(await snapshot(env, user));
   if (path === "/profile" && request.method === "PUT") {
@@ -667,7 +697,10 @@ export default {
     const headers = new Headers(response.headers);
     headers.set("Access-Control-Allow-Origin", url.origin);
     headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
-    headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
+    headers.set(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, PATCH, OPTIONS",
+    );
     headers.set("X-Content-Type-Options", "nosniff");
     return new Response(response.body, { status: response.status, headers });
   },
