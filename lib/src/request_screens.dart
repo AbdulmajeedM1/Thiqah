@@ -1,5 +1,7 @@
 import 'platform_files.dart';
 
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -120,7 +122,8 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
     }
   }
 
-  void submit(bool draft) {
+  Future<void> submit(bool draft) async {
+    if (busy) return;
     if (!form.currentState!.validate()) return;
     if (!draft && !consent) {
       toast(
@@ -133,7 +136,11 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
       return;
     }
     final r =
-        widget.draft ??
+        (widget.draft == null
+            ? null
+            : s.online
+            ? Request.fromJson(widget.draft!.toJson())
+            : widget.draft) ??
         Request(
           id: s.id(),
           title: '',
@@ -152,16 +159,22 @@ class _NewRequestScreenState extends State<NewRequestScreen> {
     r.documents
       ..clear()
       ..addAll(docs);
-    if (widget.draft != null) {
-      if (draft) {
-        s.save();
+    setState(() => busy = true);
+    final success = await runStoreAction(context, s, () async {
+      if (widget.draft != null) {
+        if (draft) {
+          await s.editDraft(r);
+        } else {
+          await s.publish(r);
+        }
       } else {
-        s.publish(r);
+        r.stage = draft ? Stage.draft : Stage.open;
+        await s.create(r);
       }
-    } else {
-      r.stage = draft ? Stage.draft : Stage.open;
-      s.create(r);
-    }
+    });
+    if (!mounted) return;
+    setState(() => busy = false);
+    if (!success) return;
     Navigator.pop(context);
     toast(
       context,
@@ -370,9 +383,13 @@ class _RequestScreenState extends State<RequestScreen> {
   Request get r => widget.request;
   void open(Widget screen) =>
       Navigator.push(context, MaterialPageRoute<void>(builder: (_) => screen));
-  Future<void> guarded(String title, String body, VoidCallback action) async {
+  Future<void> guarded(
+    String title,
+    String body,
+    FutureOr<void> Function() action,
+  ) async {
     if (await confirmAction(context, s, title, body)) {
-      action();
+      if (mounted) await runStoreAction(context, s, action);
     }
   }
 
@@ -824,15 +841,19 @@ class _OfferScreenState extends State<OfferScreen> {
             ),
             const SizedBox(height: 20),
             FilledButton(
-              onPressed: () {
+              onPressed: () async {
                 if (!key.currentState!.validate()) return;
-                s.offer(
-                  widget.request,
-                  (parseLocalizedDecimal(price.text)! * 100).round(),
-                  parseLocalizedInteger(days.text)!,
-                  notes.text.trim(),
+                final success = await runStoreAction(
+                  context,
+                  s,
+                  () => s.offer(
+                    widget.request,
+                    (parseLocalizedDecimal(price.text)! * 100).round(),
+                    parseLocalizedInteger(days.text)!,
+                    notes.text.trim(),
+                  ),
                 );
-                Navigator.pop(context);
+                if (success && context.mounted) Navigator.pop(context);
               },
               child: Text(s.t('إرسال العرض', 'Send offer')),
             ),
@@ -855,7 +876,7 @@ class ActionFormScreen extends StatefulWidget {
   final TrustStore store;
   final String title, label;
   final int minLength;
-  final ValueChanged<String> onSubmit;
+  final FutureOr<void> Function(String) onSubmit;
   @override
   State<ActionFormScreen> createState() => _ActionFormScreenState();
 }
@@ -895,10 +916,14 @@ class _ActionFormScreenState extends State<ActionFormScreen> {
           ),
           const SizedBox(height: 20),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               if (!form.currentState!.validate()) return;
-              widget.onSubmit(controller.text.trim());
-              Navigator.pop(context);
+              final success = await runStoreAction(
+                context,
+                widget.store,
+                () => widget.onSubmit(controller.text.trim()),
+              );
+              if (success && context.mounted) Navigator.pop(context);
             },
             child: Text(widget.store.t('إرسال', 'Submit')),
           ),
@@ -964,9 +989,14 @@ class _ReviewScreenState extends State<ReviewScreen> {
         ),
         const SizedBox(height: 20),
         FilledButton(
-          onPressed: () {
-            widget.store.review(widget.request, stars, text.text.trim());
-            Navigator.pop(context);
+          onPressed: () async {
+            final success = await runStoreAction(
+              context,
+              widget.store,
+              () =>
+                  widget.store.review(widget.request, stars, text.text.trim()),
+            );
+            if (success && context.mounted) Navigator.pop(context);
           },
           child: Text(widget.store.t('إرسال التقييم', 'Submit review')),
         ),

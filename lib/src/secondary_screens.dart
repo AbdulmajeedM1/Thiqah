@@ -103,10 +103,14 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  void send() {
+  Future<void> send() async {
     if (text.text.trim().isEmpty) return;
-    widget.store.send(widget.request, text.text);
-    text.clear();
+    final success = await runStoreAction(
+      context,
+      widget.store,
+      () => widget.store.send(widget.request, text.text),
+    );
+    if (success && mounted) text.clear();
   }
 
   @override
@@ -402,7 +406,13 @@ class WalletScreen extends StatelessWidget {
                             'Simulate withdrawing ${s.money(amount)}? No bank transfer will occur.',
                           ),
                         )) {
-                          s.withdraw(amount);
+                          if (context.mounted) {
+                            await runStoreAction(
+                              context,
+                              s,
+                              () => s.withdraw(amount),
+                            );
+                          }
                         }
                       }
                     : null,
@@ -517,7 +527,7 @@ class DocumentTile extends StatelessWidget {
   final Document document;
   Future<void> export(BuildContext context) async {
     try {
-      final bytes = await File(document.path).readAsBytes();
+      final bytes = await store.readDocument(document);
       final destination = await FilePicker.platform.saveFile(
         dialogTitle: store.t('حفظ نسخة', 'Save a copy'),
         fileName: document.name,

@@ -47,15 +47,15 @@ abstract interface class TokenVault {
 }
 
 class SecureTokenVault implements TokenVault {
-  const SecureTokenVault();
+  const SecureTokenVault({this.key = 'thiqah.auth.session.v1'});
+  final String key;
   static const _storage = FlutterSecureStorage();
-  static const _key = 'thiqah.auth.session.v1';
   @override
-  Future<String?> read() => _storage.read(key: _key);
+  Future<String?> read() => _storage.read(key: key);
   @override
-  Future<void> write(String token) => _storage.write(key: _key, value: token);
+  Future<void> write(String token) => _storage.write(key: key, value: token);
   @override
-  Future<void> delete() => _storage.delete(key: _key);
+  Future<void> delete() => _storage.delete(key: key);
 }
 
 /// Local account repository contract. No network transport is used.
@@ -184,6 +184,12 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  Future<void> invalidateSession(String code) async {
+    await _clearLocal();
+    errorCode = code;
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     if (busy) return;
     busy = true;
@@ -253,6 +259,22 @@ class AuthController extends ChangeNotifier {
 
 String authErrorText(String code, bool english) {
   final messages = <String, (String, String)>{
+    'network_error': (
+      'تعذر الاتصال بالخادم. تحقق من الإنترنت وحاول مجددًا.',
+      'Could not connect. Check your internet connection and retry.',
+    ),
+    'conflict': (
+      'تغيّر الطلب من جهاز آخر. انتظر التحديث ثم حاول مجددًا.',
+      'The data changed on another device. Wait for refresh and retry.',
+    ),
+    'busy': (
+      'جارٍ حفظ العملية السابقة.',
+      'The previous action is still being saved.',
+    ),
+    'invalid_document': (
+      'تعذر رفع المرفق أو الوصول إليه.',
+      'Could not upload or access the attachment.',
+    ),
     'invalid_credentials': (
       'اسم المستخدم أو كلمة المرور غير صحيحة.',
       'Incorrect username or password.',

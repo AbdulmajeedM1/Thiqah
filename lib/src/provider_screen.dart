@@ -22,6 +22,14 @@ class ProviderSummary {
         }
       }
     }
+    if (store.online) {
+      final summary = store.providerSummaries[offer.providerId] as Map?;
+      completed = summary?['completed'] as int? ?? 0;
+      reviews.clear();
+      for (final review in summary?['ratings'] as List? ?? []) {
+        reviews.add((review['rating'] as int, review['review'] as String));
+      }
+    }
   }
   int completed = 0;
   final Set<int> categories = {};

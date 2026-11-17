@@ -74,8 +74,12 @@ class _TrustShellState extends State<TrustShell> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Text(
                 s.t(
-                  'نسخة تجريبية • بيانات محلية • لا توجد دفعات حقيقية',
-                  'Demo • Local data • No real payments',
+                  s.online
+                      ? 'نسخة سحابية • تحديث تلقائي كل ٥ ثوانٍ • دفع تجريبي'
+                      : 'نسخة تجريبية • بيانات محلية • لا توجد دفعات حقيقية',
+                  s.online
+                      ? 'Cloud • Refreshes every 5 seconds • Simulated payments'
+                      : 'Demo • Local data • No real payments',
                 ),
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 11, color: Color(0xFF755300)),
@@ -638,10 +642,15 @@ class _TrustShellState extends State<TrustShell> {
                 InfoScreen(
                   store: s,
                   title: s.t('عن ثقة', 'About Thiqah'),
-                  body: s.t(
-                    'هذه نسخة مشروع جامعي تعمل دون إنترنت. تظهر الطلبات المنشورة لمقدمي الخدمة المسجلين على هذا الجهاز. المسودات خاصة بصاحبها، والمحادثات والمرفقات متاحة للعميل ومقدم الخدمة المختار. لا توجد مزامنة بين أجهزة مختلفة. يستطيع مدير المشروع إدارة الحسابات المحلية. الدفع وسحب الأرباح محاكاة، ولا يوجد توثيق هوية أو إشعارات خارجية. حذف بيانات التطبيق قد يحذف الحسابات والطلبات. الرسوم التجريبية: ٥٪ على العميل و١٠٪ عمولة مقدم الخدمة.',
-                    'This university project works offline. Published requests are visible to providers registered on this device. Drafts belong to their customer; conversations and attachments are available to the customer and selected provider. There is no synchronization between devices. The administrator manages local accounts. Payments and withdrawals are simulated. Identity and external notifications are not connected. Clearing app data may delete accounts and requests. Demo fees: 5% customer fee and 10% provider commission.',
-                  ),
+                  body: s.online
+                      ? s.t(
+                          'ثقة مشروع جامعي متصل بقاعدة بيانات مشتركة. تظهر الطلبات المنشورة لمقدمي الخدمة من أجهزة مختلفة. المسودات خاصة بصاحبها، والمرفقات والمحادثات متاحة للعميل ومقدم الخدمة المختار. تُحفظ البيانات على الخادم وتحتاج اتصالًا بالإنترنت. الدفع والسحب تجريبيان، وتوثيق الهوية وإشعارات الجهاز الخارجية غير مفعّلين. الرسوم التجريبية ٥٪ على العميل و١٠٪ على مقدم الخدمة.',
+                          'Thiqah is a university project with a shared database. Published requests reach providers across devices. Drafts are private. Attachments and chat are restricted to the customer and selected provider. Server data requires internet access. Payments and withdrawals are simulated. Identity verification and external push notifications are unavailable. Demo fees are 5% for customers and 10% for providers.',
+                        )
+                      : s.t(
+                          'هذه نسخة مشروع جامعي تعمل دون إنترنت. تظهر الطلبات المنشورة لمقدمي الخدمة المسجلين على هذا الجهاز. المسودات خاصة بصاحبها، والمحادثات والمرفقات متاحة للعميل ومقدم الخدمة المختار. لا توجد مزامنة بين أجهزة مختلفة. يستطيع مدير المشروع إدارة الحسابات المحلية. الدفع وسحب الأرباح محاكاة، ولا يوجد توثيق هوية أو إشعارات خارجية. حذف بيانات التطبيق قد يحذف الحسابات والطلبات. الرسوم التجريبية: ٥٪ على العميل و١٠٪ عمولة مقدم الخدمة.',
+                          'This university project works offline. Published requests are visible to providers registered on this device. Drafts belong to their customer; conversations and attachments are available to the customer and selected provider. There is no synchronization between devices. The administrator manages local accounts. Payments and withdrawals are simulated. Identity and external notifications are not connected. Clearing app data may delete accounts and requests. Demo fees: 5% customer fee and 10% provider commission.',
+                        ),
                 ),
               ),
             ),

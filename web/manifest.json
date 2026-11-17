@@ -5,7 +5,7 @@
   "display": "standalone",
   "background_color": "#f5f7f8",
   "theme_color": "#0B6E4F",
-  "description": "خدمات المعاملات ومتابعة الطلبات — نسخة تجريبية محلية",
+  "description": "خدمات المعاملات ومتابعة الطلبات — طلبات وعروض متزامنة بين الأجهزة",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
   "icons": [

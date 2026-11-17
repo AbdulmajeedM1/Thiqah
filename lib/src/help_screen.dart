@@ -61,20 +61,30 @@ class HelpScreen extends StatelessWidget {
           'لماذا لا يظهر طلبي لمقدم الخدمة؟',
           'Why can’t a provider see my request?',
         ),
-        s.t(
-          'تأكد من نشر الطلب؛ المسودة خاصة بك. يجب أن يسجل مقدم الخدمة الدخول على نفس الجهاز، لأن هذه النسخة لا تزامن البيانات بين الأجهزة.',
-          'Make sure the request is published; drafts are private. The provider must sign in on the same device because this version does not sync between devices.',
-        ),
+        s.online
+            ? s.t(
+                'انشر الطلب ليظهر لمقدمي الخدمة على أجهزتهم. يتم تحديث الطلبات والعروض تلقائيًا كل ٥ ثوانٍ أثناء فتح التطبيق. المسودات خاصة بحسابك.',
+                'Publish the request to reach providers on their devices. Requests and offers refresh every 5 seconds while the app is open. Drafts are private.',
+              )
+            : s.t(
+                'تأكد من نشر الطلب؛ المسودة خاصة بك. يجب أن يسجل مقدم الخدمة الدخول على نفس الجهاز، لأن هذه النسخة لا تزامن البيانات بين الأجهزة.',
+                'Make sure the request is published; drafts are private. The provider must sign in on the same device because this version does not sync between devices.',
+              ),
       ),
       (
         s.t(
           'كيف أجرّب الخدمة بين العميل ومقدم الخدمة؟',
           'How do I try both sides of the service?',
         ),
-        s.t(
-          'أنشئ حساب عميل وحساب مقدم خدمة على نفس الجهاز، ثم بدّل بينهما بتسجيل الخروج والدخول. لا توجد عروض أو ردود تلقائية.',
-          'Create a customer account and a provider account on the same device, then switch by signing out and back in. Offers and replies are not generated automatically.',
-        ),
+        s.online
+            ? s.t(
+                'أنشئ حساب عميل وحساب مقدم خدمة، وافتح كل حساب من جهاز أو متصفح مختلف. انشر طلبًا من العميل ثم أرسل عرضًا من مقدم الخدمة.',
+                'Create a customer and a provider account on separate devices or browsers. Publish a customer request, then submit a provider offer.',
+              )
+            : s.t(
+                'أنشئ حساب عميل وحساب مقدم خدمة على نفس الجهاز، ثم بدّل بينهما بتسجيل الخروج والدخول. لا توجد عروض أو ردود تلقائية.',
+                'Create a customer account and a provider account on the same device, then switch by signing out and back in. Offers and replies are not generated automatically.',
+              ),
       ),
       (
         s.t('هل الدفع والسحب حقيقيان؟', 'Are payments and withdrawals real?'),
@@ -108,10 +118,15 @@ class HelpScreen extends StatelessWidget {
           'هل تسجيل الخروج يحذف بياناتي؟',
           'Does signing out delete my data?',
         ),
-        s.t(
-          'لا، تعود بياناتك عند الدخول على نفس الجهاز. تجنّب حذف التطبيق أو مسح بياناته لأن التخزين محلي.',
-          'No. Your data returns when you sign in on the same device. Avoid uninstalling the app or clearing its data because storage is local.',
-        ),
+        s.online
+            ? s.t(
+                'تُحفظ بيانات حسابك على الخادم وتعود عند تسجيل الدخول من أي جهاز. تحتاج اتصالًا بالإنترنت للوصول إليها.',
+                'Your account data is stored on the server and returns when you sign in on any device. Internet access is required.',
+              )
+            : s.t(
+                'لا، تعود بياناتك عند الدخول على نفس الجهاز. تجنّب حذف التطبيق أو مسح بياناته لأن التخزين محلي.',
+                'No. Your data returns when you sign in on the same device. Avoid uninstalling the app or clearing its data because storage is local.',
+              ),
       ),
       (
         s.t(

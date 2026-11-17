@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:async';
+
 import 'platform_files.dart';
 
 import 'package:flutter/foundation.dart';
@@ -183,6 +185,12 @@ class Request {
 /// Domain transitions live here so widgets cannot bypass lifecycle constraints.
 class TrustStore extends ChangeNotifier {
   TrustStore({this.memoryOnly = false, this.storagePath});
+  bool get online => false;
+  bool get mutating => false;
+  Map<String, dynamic> get providerSummaries => const {};
+  Future<Uint8List> readDocument(Document document) =>
+      File(document.path).readAsBytes();
+  FutureOr<void> editDraft(Request request) => save();
   final bool memoryOnly;
   final String? storagePath;
   bool darkMode = false;
@@ -621,7 +629,7 @@ class TrustStore extends ChangeNotifier {
     save();
   }
 
-  void create(Request r) {
+  FutureOr<void> create(Request r) {
     _require(
       !provider &&
           (_activeAccountId == null
@@ -643,7 +651,7 @@ class TrustStore extends ChangeNotifier {
     );
   }
 
-  void publish(Request r) {
+  FutureOr<void> publish(Request r) {
     _require(
       requests.contains(r) &&
           !provider &&
@@ -655,7 +663,7 @@ class TrustStore extends ChangeNotifier {
     event(r, 'تم نشر الطلب', 'Request published');
   }
 
-  void offer(Request r, int amount, int days, String notes) {
+  FutureOr<void> offer(Request r, int amount, int days, String notes) {
     _require(
       provider &&
           requests.contains(r) &&
@@ -680,7 +688,7 @@ class TrustStore extends ChangeNotifier {
     event(r, 'وصل عرض جديد', 'New offer received');
   }
 
-  void withdrawOffer(Request r) {
+  FutureOr<void> withdrawOffer(Request r) {
     _require(
       requests.contains(r) &&
           provider &&
@@ -691,7 +699,7 @@ class TrustStore extends ChangeNotifier {
     event(r, 'تم سحب العرض', 'Offer withdrawn');
   }
 
-  void select(Request r, Offer o) {
+  FutureOr<void> select(Request r, Offer o) {
     _require(
       requests.contains(r) &&
           !provider &&
@@ -704,7 +712,7 @@ class TrustStore extends ChangeNotifier {
     event(r, 'تم اختيار مقدم الخدمة', 'Provider selected');
   }
 
-  void pay(Request r) {
+  FutureOr<void> pay(Request r) {
     _require(
       requests.contains(r) &&
           !provider &&
@@ -716,7 +724,7 @@ class TrustStore extends ChangeNotifier {
     event(r, 'محاكاة إيداع المبلغ في الضمان', 'Simulated escrow deposit');
   }
 
-  void complete(Request r, String proof) {
+  FutureOr<void> complete(Request r, String proof) {
     _require(
       provider &&
           requests.contains(r) &&
@@ -733,7 +741,7 @@ class TrustStore extends ChangeNotifier {
     );
   }
 
-  void confirm(Request r) {
+  FutureOr<void> confirm(Request r) {
     _require(
       requests.contains(r) &&
           !provider &&
@@ -748,7 +756,7 @@ class TrustStore extends ChangeNotifier {
     );
   }
 
-  void cancel(Request r) {
+  FutureOr<void> cancel(Request r) {
     _require(
       !provider &&
           requests.contains(r) &&
@@ -759,7 +767,7 @@ class TrustStore extends ChangeNotifier {
     event(r, 'تم إلغاء الطلب', 'Request cancelled');
   }
 
-  void dispute(Request r, String reason) {
+  FutureOr<void> dispute(Request r, String reason) {
     _require(
       requests.contains(r) &&
           canReadPrivateDetails(r) &&
@@ -775,7 +783,7 @@ class TrustStore extends ChangeNotifier {
     );
   }
 
-  void review(Request r, int rating, String text) {
+  FutureOr<void> review(Request r, int rating, String text) {
     _require(
       !provider &&
           requests.contains(r) &&
@@ -790,7 +798,7 @@ class TrustStore extends ChangeNotifier {
     event(r, 'تم إضافة التقييم', 'Review added');
   }
 
-  void send(Request r, String text) {
+  FutureOr<void> send(Request r, String text) {
     _require(text.trim().isNotEmpty && requests.contains(r) && canChat(r));
     r.messages.add(
       Message(text.trim(), provider, DateTime.now().toIso8601String()),
@@ -798,7 +806,7 @@ class TrustStore extends ChangeNotifier {
     save();
   }
 
-  void withdraw(int amount) {
+  FutureOr<void> withdraw(int amount) {
     _require(provider && amount > 0 && amount <= available);
     withdrawn += amount;
     notifications.insert(

@@ -9,12 +9,19 @@ import 'src/local_auth.dart';
 import 'src/auth_screens.dart';
 import 'src/admin_screen.dart';
 import 'src/motion.dart';
+import 'src/remote_api.dart';
+import 'src/remote_store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final store = TrustStore();
+  const offline = bool.fromEnvironment('THIQAH_OFFLINE');
+  final api = RemoteApi();
+  final store = offline ? TrustStore() : RemoteStore(api);
   final auth = AuthController(
-    api: LocalAuthApi(),
+    api: offline ? LocalAuthApi() : api,
+    vault: const SecureTokenVault(
+      key: offline ? 'thiqah.auth.session.v1' : 'thiqah.cloud.session.v1',
+    ),
     onAuthenticated: (user) => store.activateAccount(
       accountId: user.id,
       fullName: user.fullName,
@@ -23,6 +30,7 @@ Future<void> main() async {
     ),
     onLogout: store.clearAccount,
   );
+  api.onUnauthorized = auth.invalidateSession;
   runApp(TrustApp(store: store, auth: auth));
   await auth.restore();
 }

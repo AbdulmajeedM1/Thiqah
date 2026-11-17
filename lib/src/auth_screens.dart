@@ -158,7 +158,12 @@ class _AuthScreenState extends State<AuthScreen> {
       title: Text(s.t('الشروط والخصوصية', 'Terms and privacy')),
       content: SingleChildScrollView(
         child: Text(
-          (kIsWeb
+          (s.online
+                  ? s.t(
+                      'تُحفظ الحسابات والطلبات والمرفقات على خادم ثقة لتتمكن من استخدامها من أجهزة مختلفة. تظهر الطلبات المنشورة لمقدمي الخدمة، وتتاح المرفقات والمحادثة لصاحب الطلب ومقدم الخدمة المختار.\n\n',
+                      'Accounts, requests and attachments are stored on the Thiqah server for access across devices. Published requests are visible to providers. Attachments and chat are available to the owner and selected provider.\n\n',
+                    )
+                  : kIsWeb
                   ? s.t(
                       'هذه نسخة ويب تجريبية من مشروع ثقة. تُحفظ الحسابات والطلبات والمرفقات داخل هذا المتصفح. مسح بيانات الموقع يحذفها، ولكل جهاز ومتصفح بياناته الخاصة. يتطلب فتح الموقع اتصالًا بالإنترنت.\n\n',
                       'This is a Thiqah web demo. Accounts, requests and attachments are stored in this browser. Clearing site data removes them. Each device and browser has separate data. Opening the site requires internet access.\n\n',
@@ -543,7 +548,18 @@ class _AuthScreenState extends State<AuthScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(color: appMuted(context)),
                   ),
-                  if (kIsWeb) ...[
+                  if (s.online) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      s.t(
+                        'حسابك السحابي يعمل على جميع أجهزتك. أنشئ حسابًا جديدًا إذا كنت تستخدم النسخة المحلية سابقًا.',
+                        'Your cloud account works across devices. Create a new account if you previously used the local version.',
+                      ),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: appMuted(context), fontSize: 12),
+                    ),
+                  ],
+                  if (kIsWeb && !s.online) ...[
                     const SizedBox(height: 12),
                     Text(
                       s.t(

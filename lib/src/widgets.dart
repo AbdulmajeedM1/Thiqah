@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import 'auth.dart';
 
 import 'store.dart';
 import 'motion.dart';
@@ -268,3 +272,28 @@ void toast(BuildContext context, String message) =>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
+
+Future<bool> runStoreAction(
+  BuildContext context,
+  TrustStore store,
+  FutureOr<void> Function() action,
+) async {
+  if (store.mutating) return false;
+  try {
+    await action();
+    return true;
+  } catch (error) {
+    if (context.mounted) {
+      toast(
+        context,
+        error is AuthFailure
+            ? authErrorText(error.code, store.english)
+            : store.t(
+                'تعذر إتمام العملية. حاول مجددًا.',
+                'Could not complete the action. Please retry.',
+              ),
+      );
+    }
+    return false;
+  }
+}
