@@ -1,8 +1,8 @@
-import 'dart:io';
+import 'platform_files.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
 
 import 'store.dart';
 import 'number_input.dart';
@@ -14,6 +14,7 @@ import 'provider_screen.dart';
 Future<List<Document>> pickDocuments() async {
   final result = await FilePicker.platform.pickFiles(
     allowMultiple: true,
+    withData: kIsWeb,
     type: FileType.custom,
     allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'docx', 'xlsx', 'zip'],
   );
@@ -29,13 +30,17 @@ Future<List<Document>> pickDocuments() async {
   await docs.create(recursive: true);
   final copied = <Document>[];
   for (final f in result.files) {
-    if (f.path == null) {
+    if (kIsWeb ? f.bytes == null : f.path == null) {
       throw const FormatException('Cannot read this file. / تعذر قراءة الملف.');
     }
     final extension = f.extension ?? 'bin';
     final dest =
         '${docs.path}/${DateTime.now().microsecondsSinceEpoch}.$extension';
-    await File(f.path!).copy(dest);
+    if (kIsWeb) {
+      await File(dest).writeAsBytes(f.bytes!);
+    } else {
+      await File(f.path!).copy(dest);
+    }
     copied.add(Document(f.name, dest, f.size));
   }
   return copied;

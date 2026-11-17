@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'auth.dart';
@@ -157,14 +158,21 @@ class _AuthScreenState extends State<AuthScreen> {
       title: Text(s.t('الشروط والخصوصية', 'Terms and privacy')),
       content: SingleChildScrollView(
         child: Text(
-          s.t(
-            'هذه نسخة مشروع جامعي من ثقة تعمل دون إنترنت. تُحفظ الحسابات والطلبات على هذا الجهاز فقط، ويستطيع مدير المشروع الاطلاع على بيانات التسجيل وإيقاف الحسابات المحلية.\n\n'
+          (kIsWeb
+                  ? s.t(
+                      'هذه نسخة ويب تجريبية من مشروع ثقة. تُحفظ الحسابات والطلبات والمرفقات داخل هذا المتصفح. مسح بيانات الموقع يحذفها، ولكل جهاز ومتصفح بياناته الخاصة. يتطلب فتح الموقع اتصالًا بالإنترنت.\n\n',
+                      'This is a Thiqah web demo. Accounts, requests and attachments are stored in this browser. Clearing site data removes them. Each device and browser has separate data. Opening the site requires internet access.\n\n',
+                    )
+                  : s.t(
+                      'هذه نسخة مشروع جامعي من ثقة تعمل دون إنترنت. تُحفظ الحسابات والطلبات على هذا الجهاز فقط، ويستطيع مدير المشروع الاطلاع على بيانات التسجيل وإيقاف الحسابات المحلية.\n\n',
+                      'This is an offline university project. Accounts and requests are stored only on this device. The project administrator can view registration details and suspend local accounts.\n\n',
+                    )) +
+              s.t(
                 'استخدم بيانات تخصك، ولا تشارك بيانات حساسة أو وثائق رسمية في هذه النسخة. البريد والجوال غير موثقين، وإنشاء حساب مقدم خدمة لا يمثل اعتمادًا أو توثيقًا. لا تتوفر دفعات حقيقية أو خدمة حكومية فعلية.\n\n'
-                'بإنشاء الحساب توافق على استخدام هذه النسخة للتجربة واحترام خصوصية الآخرين.',
-            'This is an offline university project. Accounts and requests are stored only on this device. The project administrator can view registration details and suspend local accounts.\n\n'
+                    'بإنشاء الحساب توافق على استخدام هذه النسخة للتجربة واحترام خصوصية الآخرين.',
                 'Use your own details and avoid sensitive information or official documents in this version. Email and phone are not verified. A provider account does not indicate certification or approval. Real payments and government services are unavailable.\n\n'
-                'By creating an account, you agree to use this version for testing and respect others’ privacy.',
-          ),
+                    'By creating an account, you agree to use this version for testing and respect others’ privacy.',
+              ),
         ),
       ),
       actions: [
@@ -535,6 +543,17 @@ class _AuthScreenState extends State<AuthScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(color: appMuted(context)),
                   ),
+                  if (kIsWeb) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      s.t(
+                        'نسخة تجريبية • تُحفظ بياناتك في هذا المتصفح',
+                        'Demo • Your data is saved in this browser',
+                      ),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: appMuted(context), fontSize: 12),
+                    ),
+                  ],
                   const SizedBox(height: 26),
                   Panel(
                     child: Column(

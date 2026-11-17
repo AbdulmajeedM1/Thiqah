@@ -1,8 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
+import 'platform_files.dart';
 
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
 
 enum Stage {
   draft,

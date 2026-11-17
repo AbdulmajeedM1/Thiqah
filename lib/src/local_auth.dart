@@ -89,12 +89,16 @@ class LocalAuthApi extends AuthApi {
       } else {
         final admin =
             bootstrapAdmin ??
-            Map<String, dynamic>.from(
-              jsonDecode(await rootBundle.loadString('assets/demo_admin.json')),
-            );
+            (kIsWeb
+                ? null
+                : Map<String, dynamic>.from(
+                    jsonDecode(
+                      await rootBundle.loadString('assets/demo_admin.json'),
+                    ),
+                  ));
         _state = {
           'version': 1,
-          'users': [Map<String, dynamic>.from(admin)],
+          'users': [if (admin != null) Map<String, dynamic>.from(admin)],
           'sessions': <dynamic>[],
           'attempts': <String, dynamic>{},
         };

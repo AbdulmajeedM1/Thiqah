@@ -1,4 +1,6 @@
-import 'dart:io';
+import 'platform_files.dart';
+
+import 'package:flutter/foundation.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -521,10 +523,13 @@ class DocumentTile extends StatelessWidget {
         fileName: document.name,
         bytes: bytes,
       );
-      if (destination != null && !(Platform.isAndroid || Platform.isIOS)) {
+      if (destination != null &&
+          !kIsWeb &&
+          defaultTargetPlatform != TargetPlatform.android &&
+          defaultTargetPlatform != TargetPlatform.iOS) {
         await File(destination).writeAsBytes(bytes);
       }
-      if (context.mounted && destination != null) {
+      if (context.mounted && (kIsWeb || destination != null)) {
         toast(
           context,
           store.t('تم حفظ نسخة من المستند', 'Document copy saved'),
